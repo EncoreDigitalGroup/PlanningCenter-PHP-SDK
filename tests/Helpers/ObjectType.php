@@ -15,6 +15,8 @@ enum ObjectType: string
     case Group = "group";
     case GroupMembers = "people";
     case GroupMembership = "membership";
+    case Household = "household";
+    case HouseholdMembership = "householdMembership";
     case Profile = "profile";
     case TagGroup = "tagGroup";
     case Tag = "tag";
