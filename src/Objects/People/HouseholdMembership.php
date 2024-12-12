@@ -8,44 +8,64 @@
 namespace EncoreDigitalGroup\PlanningCenter\Objects\People;
 
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Attributes\HouseholdAttributes;
+use EncoreDigitalGroup\PlanningCenter\Objects\People\Attributes\HouseholdMembershipAttributes;
+use EncoreDigitalGroup\PlanningCenter\Objects\People\Relationships\HouseholdMembershipRelationships;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Relationships\HouseholdRelationships;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\HasEmails;
-use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\Households\CreatesHouseholds;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\Households\InteractsWithHouseholds;
 use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\ClientResponse;
+use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\Relationships\BasicRelationship;
+use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\Relationships\BasicRelationshipData;
 use EncoreDigitalGroup\PlanningCenter\Support\AttributeMapper;
 use EncoreDigitalGroup\PlanningCenter\Support\PlanningCenterApiVersion;
+use EncoreDigitalGroup\PlanningCenter\Support\RelationshipMapper;
 use EncoreDigitalGroup\PlanningCenter\Traits\HasPlanningCenterClient;
 use Exception;
 use Illuminate\Support\Arr;
 use TypeError;
 
 /** @api */
-class Household
+class HouseholdMembership
 {
-    use CreatesHouseholds;
     use HasPlanningCenterClient;
     use InteractsWithHouseholds;
 
-    public const string HOUSEHOLDS_ENDPOINT = "/people/v2/households";
+    public HouseholdMembershipAttributes $attributes;
+    public HouseholdMembershipRelationships $relationships;
+    private bool $isCreating = false;
 
-    public HouseholdAttributes $attributes;
-    public HouseholdRelationships $relationships;
-
-    public static function make(?string $clientId = null, ?string $clientSecret = null): Household
+    public static function make(?string $clientId = null, ?string $clientSecret = null): HouseholdMembership
     {
         $household = new self($clientId, $clientSecret);
-        $household->attributes = new HouseholdAttributes;
-        $household->relationships = new HouseholdRelationships;
+        $household->attributes = new HouseholdMembershipAttributes;
+        $household->relationships = new HouseholdMembershipRelationships;
         $household->setApiVersion(PlanningCenterApiVersion::PEOPLE_DEFAULT);
 
         return $household;
     }
 
+    public function forHouseholdMembershipId(string $householdId): static
+    {
+        $this->attributes->householdMembershipId = $householdId;
+
+        return $this;
+    }
+
+    public function forPersonId(string $personId): static
+    {
+        if (is_null($this->relationships->person->data)) {
+            $this->relationships->person->data = new BasicRelationshipData("Person");
+        }
+
+        $this->relationships->person->data->id = $personId;
+
+        return $this;
+    }
+
     public function all(?array $query = null): ClientResponse
     {
         $http = $this->client()
-            ->get($this->hostname() . self::HOUSEHOLDS_ENDPOINT, $query);
+            ->get($this->hostname() . Household::HOUSEHOLDS_ENDPOINT . "{$this->householdId}/household_memberships", $query);
 
         return $this->processResponse($http);
     }
@@ -55,7 +75,7 @@ class Household
         $this->isCreating = true;
 
         $http = $this->client()
-            ->post($this->hostname() . self::HOUSEHOLDS_ENDPOINT, $this->mapToPco());
+            ->post($this->hostname() . Household::HOUSEHOLDS_ENDPOINT . "{$this->householdId}/household_memberships", $this->mapToPco());
 
         return $this->processResponse($http);
     }
@@ -87,7 +107,7 @@ class Household
 
     private function householdIdEndpoint(): string
     {
-        return $this->hostname() . self::HOUSEHOLDS_ENDPOINT . "/{$this->attributes->householdId}";
+        return $this->hostname() . Household::HOUSEHOLDS_ENDPOINT . "/{$this->householdId}";
     }
 
     private function mapFromPco(ClientResponse $clientResponse): void
@@ -103,18 +123,20 @@ class Household
         }
 
         foreach ($records as $record) {
-            $this->attributes->householdId = $record->id;
+            $this->attributes->householdMembershipId = $record->id;
             $attributeMap = [
-                "avatar" => "avatar",
-                "createdAt" => "created_at",
-                "memberCount" => "member_count",
-                "name" => "name",
-                "primaryContactId" => "primary_contact_id",
-                "primaryContactName" => "primary_contact_name",
-                "updatedAt" => "updated_at",
+                "personName" => "person_name",
+                "pending" => "pending",
             ];
 
-            AttributeMapper::from($record, $this->attributes, $attributeMap, ["created_at", "updated_at",]);
+            AttributeMapper::from($record, $this->attributes, $attributeMap);
+
+            $relationshipMap = [
+                "person" => "person",
+            ];
+
+            RelationshipMapper::from($record, $this->relationships, $relationshipMap);
+
             $clientResponse->data->add($this);
         }
 
@@ -125,17 +147,14 @@ class Household
         $household = [
             "data" => [
                 "attributes" => [
-                    "name" => $this->attributes->name ?? null,
-                    "member_count" => $this->attributes->memberCount ?? null,
-                    "avatar" => $this->attributes->avatar ?? null,
-                    "primary_contact_id" => $this->attributes->primaryContactId ?? null,
+                    "personName" => $this->attributes->personName ?? null,
+                    "pending" => $this->attributes->pending ?? null,
                 ],
                 "relationships" => [
-                    "people" => $this->relationships->people()->toArray(),
-                    "primaryContact" => [
+                    "person" => [
                         "data" => [
-                            "type" => $this->relationships->primaryContact()->data?->type,
-                            "id" => $this->relationships->primaryContact()->data?->id,
+                            "type" => $this->relationships->person->data->type ?? null,
+                            "id" => $this->relationships->person->data->id ?? null,
                         ],
                     ],
                 ],
