@@ -19,6 +19,7 @@ class HouseholdMocks extends BaseMock
     use HasPlanningCenterClient;
 
     public const string HOUSEHOLD_ID = "1";
+    public const string HOUSEHOLD_NAME = "Smith Household";
     public const string HOUSEHOLD_PRIMARY_CONTACT_NAME = "John Smith";
     public const string HOUSEHOLD_PRIMARY_CONTACT_ID = "1";
     public const int HOUSEHOLD_MEMBER_COUNT = 1;
@@ -90,7 +91,7 @@ class HouseholdMocks extends BaseMock
             "type" => "Household",
             "id" => self::HOUSEHOLD_ID,
             "attributes" => [
-                "name" => "string",
+                "name" => self::HOUSEHOLD_NAME,
                 "member_count" => self::HOUSEHOLD_MEMBER_COUNT,
                 "primary_contact_name" => self::HOUSEHOLD_PRIMARY_CONTACT_NAME,
                 "created_at" => "2000-01-01T12:00:00Z",

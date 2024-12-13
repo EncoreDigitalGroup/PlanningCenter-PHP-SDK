@@ -20,12 +20,16 @@ class HouseholdRelationships
     public function __construct()
     {
         $this->primaryContact = new BasicRelationship(new BasicRelationshipData("Person"));
-        $this->people = new Collection();
+        $this->people = new Collection;
     }
 
     /** @returns Collection<BasicRelationship> */
     public function people(): Collection
     {
+        if (!isset($this->people)) {
+            $this->people = new Collection;
+        }
+
         return $this->people;
     }
 

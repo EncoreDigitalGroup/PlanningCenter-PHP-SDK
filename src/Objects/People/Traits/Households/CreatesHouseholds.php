@@ -31,6 +31,10 @@ trait CreatesHouseholds
 
     public function setPrimaryContactId(string $primaryContactId): static
     {
+        if (!isset($this->primaryContact)) {
+            $this->primaryContact = new BasicRelationship(new BasicRelationshipData("Person"));
+        }
+
         if (is_null($this->primaryContact->data)) {
             $this->primaryContact->data = new BasicRelationshipData("Person");
         }
@@ -48,6 +52,10 @@ trait CreatesHouseholds
 
     private function personIdIsHouseholdMember(string $personId): bool
     {
+        if (!isset($this->people)) {
+            $this->people = new Collection;
+        }
+
         return $this->people->contains(fn(BasicRelationship $relationship) => !is_null($relationship->data) && $relationship->data->id === $personId);
     }
 }
