@@ -65,7 +65,7 @@ class HouseholdMembership
     public function all(?array $query = null): ClientResponse
     {
         $http = $this->client()
-            ->get($this->hostname() . Household::HOUSEHOLDS_ENDPOINT . "{$this->householdId}/household_memberships", $query);
+            ->get($this->hostname() . Household::HOUSEHOLDS_ENDPOINT . "/{$this->householdId}/household_memberships", $query);
 
         return $this->processResponse($http);
     }
@@ -75,7 +75,7 @@ class HouseholdMembership
         $this->isCreating = true;
 
         $http = $this->client()
-            ->post($this->hostname() . Household::HOUSEHOLDS_ENDPOINT . "{$this->householdId}/household_memberships", $this->mapToPco());
+            ->post($this->hostname() . Household::HOUSEHOLDS_ENDPOINT . "/{$this->householdId}/household_memberships", $this->mapToPco());
 
         return $this->processResponse($http);
     }
@@ -83,7 +83,7 @@ class HouseholdMembership
     public function get(?array $query = null): ClientResponse
     {
         $http = $this->client()
-            ->get($this->householdIdEndpoint(), $query);
+            ->get($this->householdIdEndpoint() . "/household_memberships", $query);
 
         return $this->processResponse($http);
     }
@@ -92,7 +92,7 @@ class HouseholdMembership
     public function update(): ClientResponse
     {
         $http = $this->client()
-            ->patch($this->householdIdEndpoint(), $this->mapToPco());
+            ->patch($this->householdIdEndpoint() . "/household_memberships/{$this->attributes->householdMembershipId}", $this->mapToPco());
 
         return $this->processResponse($http);
     }

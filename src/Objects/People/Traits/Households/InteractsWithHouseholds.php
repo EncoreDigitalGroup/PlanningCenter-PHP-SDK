@@ -26,7 +26,9 @@ trait InteractsWithHouseholds
         $household["data"]["attributes"] = Arr::whereNotNull($household["data"]["attributes"]);
         $household["data"]["relationships"] = Arr::whereNotNull($household["data"]["relationships"]);
 
-        if (is_null($household["data"]["relationships"]["primaryContact"]["data"]["id"])) {
+        $primaryContactId = Arr::get($household, "data.relationships.primaryContact.data.id");
+
+        if (is_null($primaryContactId)) {
             unset($household["data"]["relationships"]["primaryContact"]);
         }
 

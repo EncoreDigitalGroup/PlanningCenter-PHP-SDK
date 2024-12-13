@@ -3,6 +3,7 @@
 namespace Tests\Unit\People;
 
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Household;
+use EncoreDigitalGroup\PlanningCenter\Objects\People\HouseholdMembership;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Person;
 use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\ClientResponse;
 use Illuminate\Support\Collection;
@@ -78,3 +79,76 @@ describe("People Household Tests", function (): void {
     });
 })->group("people.households");
 
+describe("People Household Membership Tests", function (): void {
+    test("Household Memberships: Can Create Household Membership", function (): void {
+        $membership = HouseholdMembership::make(TestConstants::CLIENT_ID, TestConstants::CLIENT_SECRET);
+
+        $membership->forHouseholdId("1");
+        $membership->forPersonId("1");
+
+        $response = $membership->create();
+        /** @var HouseholdMembership $pcoMembership */
+        $pcoMembership = $response->data->first();
+
+        expect($response)->toBeInstanceOf(ClientResponse::class)
+            ->and($pcoMembership->attributes->householdId)->toBe(HouseholdMocks::HOUSEHOLD_ID)
+            ->and($pcoMembership->attributes->personName)->toBe(HouseholdMocks::HOUSEHOLD_PRIMARY_CONTACT_NAME);
+    });
+
+    test("Household Memberships: Can List All", function (): void {
+        $membership = HouseholdMembership::make(TestConstants::CLIENT_ID, TestConstants::CLIENT_SECRET);
+
+        $response = $membership
+            ->forHouseholdId("1")
+            ->all();
+
+        expect($response)->toBeInstanceOf(ClientResponse::class)
+            ->and($response->data)->toBeInstanceOf(Collection::class)
+            ->and($response->data->count())->toBe(1);
+    });
+
+    test("Household Memberships: Can Get Household Membership By ID", function (): void {
+        $membership = HouseholdMembership::make(TestConstants::CLIENT_ID, TestConstants::CLIENT_SECRET);
+
+        $response = $membership
+            ->forHouseholdId("1")
+            ->forHouseholdMembershipId("1")
+            ->get();
+
+        /** @var HouseholdMembership $pcoMembership */
+        $pcoMembership = $response->data->first();
+
+        expect($response)->toBeInstanceOf(ClientResponse::class)
+            ->and($pcoMembership->attributes->householdId)->toBe(HouseholdMocks::HOUSEHOLD_ID)
+            ->and($pcoMembership->attributes->householdMembershipId)->toBe(HouseholdMocks::HOUSEHOLD_MEMBERSHIP_ID)
+            ->and($pcoMembership->attributes->personName)->toBe(HouseholdMocks::HOUSEHOLD_PRIMARY_CONTACT_NAME);
+    });
+
+    test("Household Memberships: Can Update Household Membership", function (): void {
+        $membership = HouseholdMembership::make(TestConstants::CLIENT_ID, TestConstants::CLIENT_SECRET);
+
+        $response = $membership
+            ->forHouseholdId("1")
+            ->forHouseholdMembershipId("1")
+            ->update();
+
+        /** @var HouseholdMembership $pcoMembership */
+        $pcoMembership = $response->data->first();
+
+        expect($response)->toBeInstanceOf(ClientResponse::class)
+            ->and($pcoMembership->attributes->householdId)->toBe(HouseholdMocks::HOUSEHOLD_ID)
+            ->and($pcoMembership->attributes->householdMembershipId)->toBe(HouseholdMocks::HOUSEHOLD_MEMBERSHIP_ID)
+            ->and($pcoMembership->attributes->personName)->toBe(HouseholdMocks::HOUSEHOLD_PRIMARY_CONTACT_NAME);
+    });
+
+    test("Household Memberships: Can Delete Household Membership", function (): void {
+        $membership = HouseholdMembership::make(TestConstants::CLIENT_ID, TestConstants::CLIENT_SECRET);
+
+        $response = $membership
+            ->forHouseholdId("1")
+            ->forHouseholdMembershipId("1")
+            ->delete();
+
+        expect($response->data->isEmpty())->toBeTrue();
+    });
+})->group("people.households");
