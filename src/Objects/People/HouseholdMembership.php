@@ -133,11 +133,10 @@ class HouseholdMembership
 
             AttributeMapper::from($record, $membership->attributes, $attributeMap);
 
-            $relationshipMap = [
-                "person" => "person",
-            ];
-
-            RelationshipMapper::from($record, $membership->relationships, $relationshipMap);
+            $membership->relationships->person->data = new BasicRelationshipData(
+                $record->relationships->person->data->type,
+                $record->relationships->person->data->id
+            );
 
             $clientResponse->data->add($membership);
         }
