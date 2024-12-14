@@ -123,21 +123,22 @@ class HouseholdMembership
         }
 
         foreach ($records as $record) {
-            $this->attributes->householdMembershipId = $record->id;
+            $membership = HouseholdMembership::make($this->clientId, $this->clientSecret);
+            $membership->attributes->householdMembershipId = $record->id;
             $attributeMap = [
                 "personName" => "person_name",
                 "pending" => "pending",
             ];
 
-            AttributeMapper::from($record, $this->attributes, $attributeMap);
+            AttributeMapper::from($record, $membership->attributes, $attributeMap);
 
             $relationshipMap = [
                 "person" => "person",
             ];
 
-            RelationshipMapper::from($record, $this->relationships, $relationshipMap);
+            RelationshipMapper::from($record, $membership->relationships, $relationshipMap);
 
-            $clientResponse->data->add($this);
+            $clientResponse->data->add($membership);
         }
 
     }
