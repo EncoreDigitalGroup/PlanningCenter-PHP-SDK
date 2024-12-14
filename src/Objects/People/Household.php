@@ -13,6 +13,7 @@ use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\HasEmails;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\Households\CreatesHouseholds;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\Households\InteractsWithHouseholds;
 use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\ClientResponse;
+use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\Relationships\BasicRelationshipData;
 use EncoreDigitalGroup\PlanningCenter\Support\AttributeMapper;
 use EncoreDigitalGroup\PlanningCenter\Support\PlanningCenterApiVersion;
 use EncoreDigitalGroup\PlanningCenter\Traits\HasPlanningCenterClient;
@@ -114,6 +115,11 @@ class Household
                 "primaryContactName" => "primary_contact_name",
                 "updatedAt" => "updated_at",
             ];
+
+            foreach ($record->relationships->people->data as $person) {
+                $household->relationships->addPerson($person->id);
+            }
+
 
             AttributeMapper::from($record, $household->attributes, $attributeMap, ["created_at", "updated_at",]);
             $clientResponse->data->add($household);

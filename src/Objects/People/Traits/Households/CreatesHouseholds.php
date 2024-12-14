@@ -14,8 +14,8 @@ use Illuminate\Support\Collection;
 trait CreatesHouseholds
 {
     /** @var Collection<BasicRelationship> $people */
-    protected Collection $people;
-    protected BasicRelationship $primaryContact;
+    public Collection $people;
+    public BasicRelationship $primaryContact;
     private bool $isCreating = false;
 
     public function addPerson(string $personId): static
