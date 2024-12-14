@@ -124,7 +124,8 @@ class HouseholdMembership
 
         foreach ($records as $record) {
             $membership = HouseholdMembership::make($this->clientId, $this->clientSecret);
-            $membership->attributes->householdMembershipId = $record->id;
+            $membership->forHouseholdId($this->attributes->householdId);
+            $membership->forHouseholdMembershipId($record->id);
             $attributeMap = [
                 "personName" => "person_name",
                 "pending" => "pending",
