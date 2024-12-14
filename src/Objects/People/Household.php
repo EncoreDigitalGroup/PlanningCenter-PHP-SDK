@@ -103,7 +103,8 @@ class Household
         }
 
         foreach ($records as $record) {
-            $this->attributes->householdId = $record->id;
+            $household = Household::make($this->clientId, $this->clientSecret);
+            $household->attributes->householdId = $record->id;
             $attributeMap = [
                 "avatar" => "avatar",
                 "createdAt" => "created_at",
@@ -114,8 +115,8 @@ class Household
                 "updatedAt" => "updated_at",
             ];
 
-            AttributeMapper::from($record, $this->attributes, $attributeMap, ["created_at", "updated_at",]);
-            $clientResponse->data->add($this);
+            AttributeMapper::from($record, $household->attributes, $attributeMap, ["created_at", "updated_at",]);
+            $clientResponse->data->add($household);
         }
 
     }
