@@ -116,12 +116,14 @@ class Household
                 "updatedAt" => "updated_at",
             ];
 
+            AttributeMapper::from($record, $household->attributes, $attributeMap, ["created_at", "updated_at",]);
+
             foreach ($record->relationships->people->data as $person) {
                 $household->relationships->addPerson($person->id);
             }
 
+            $household->relationships->setPrimaryContactId($record->relationships->primary_contact->data->id);
 
-            AttributeMapper::from($record, $household->attributes, $attributeMap, ["created_at", "updated_at",]);
             $clientResponse->data->add($household);
         }
 

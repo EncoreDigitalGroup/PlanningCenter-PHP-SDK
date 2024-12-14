@@ -15,8 +15,6 @@ class HouseholdRelationships
 {
     use CreatesHouseholds;
 
-    protected BasicRelationship $primaryContact;
-
     public function __construct()
     {
         $this->primaryContact = new BasicRelationship(new BasicRelationshipData("Person"));
