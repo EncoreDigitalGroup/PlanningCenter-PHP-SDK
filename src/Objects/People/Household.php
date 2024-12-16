@@ -9,16 +9,13 @@ namespace EncoreDigitalGroup\PlanningCenter\Objects\People;
 
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Attributes\HouseholdAttributes;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Relationships\HouseholdRelationships;
-use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\HasEmails;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\Households\CreatesHouseholds;
 use EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\Households\InteractsWithHouseholds;
 use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\ClientResponse;
-use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\Relationships\BasicRelationshipData;
 use EncoreDigitalGroup\PlanningCenter\Support\AttributeMapper;
 use EncoreDigitalGroup\PlanningCenter\Support\PlanningCenterApiVersion;
 use EncoreDigitalGroup\PlanningCenter\Traits\HasPlanningCenterClient;
 use Exception;
-use Illuminate\Support\Arr;
 use TypeError;
 
 /** @api */
@@ -100,37 +97,20 @@ class Household
         }
 
         if (!is_iterable($records)) {
+            $this->prepareIncomingHouseholdPayload($clientResponse, $records);
             return;
         }
 
         foreach ($records as $record) {
-            $household = Household::make($this->clientId, $this->clientSecret);
-            $household->attributes->householdId = $record->id;
-            $attributeMap = [
-                "avatar" => "avatar",
-                "createdAt" => "created_at",
-                "memberCount" => "member_count",
-                "name" => "name",
-                "primaryContactId" => "primary_contact_id",
-                "primaryContactName" => "primary_contact_name",
-                "updatedAt" => "updated_at",
-            ];
-
-            AttributeMapper::from($record, $household->attributes, $attributeMap, ["created_at", "updated_at",]);
-
-            foreach ($record->relationships->people->data as $person) {
-                $household->relationships->addPerson($person->id);
-            }
-
-            $household->relationships->setPrimaryContactId($record->relationships->primary_contact->data->id);
-
-            $clientResponse->data->add($household);
+            $this->prepareIncomingHouseholdPayload($clientResponse, $record);
         }
 
     }
 
     private function mapToPco(): array
     {
+        $this->updateMemberCount();
+
         $household = [
             "data" => [
                 "attributes" => [
@@ -140,8 +120,15 @@ class Household
                     "primary_contact_id" => $this->attributes->primaryContactId ?? null,
                 ],
                 "relationships" => [
-                    "people" => $this->relationships->people()->toArray(),
-                    "primaryContact" => [
+                    "people" => [
+                        "data" => $this->relationships->people->map(function ($relationship) {
+                            return [
+                                "type" => $relationship->data->type,
+                                "id" => $relationship->data->id,
+                            ];
+                        })->toArray(),
+                    ],
+                    "primary_contact" => [
                         "data" => [
                             "type" => $this->relationships->primaryContact()->data?->type,
                             "id" => $this->relationships->primaryContact()->data?->id,

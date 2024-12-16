@@ -6,7 +6,11 @@
 
 namespace EncoreDigitalGroup\PlanningCenter\Objects\People\Traits\Households;
 
+use EncoreDigitalGroup\PlanningCenter\Objects\People\Household;
+use EncoreDigitalGroup\PlanningCenter\Objects\SdkObjects\ClientResponse;
+use EncoreDigitalGroup\PlanningCenter\Support\AttributeMapper;
 use Illuminate\Support\Arr;
+use stdClass;
 
 trait InteractsWithHouseholds
 {
@@ -37,5 +41,35 @@ trait InteractsWithHouseholds
         }
 
         return $household;
+    }
+
+    private function prepareIncomingHouseholdPayload(ClientResponse &$clientResponse, stdClass $payload)
+    {
+        $household = Household::make($this->clientId, $this->clientSecret);
+        $household->forHouseholdId($payload->id);
+        $attributeMap = [
+            "avatar" => "avatar",
+            "createdAt" => "created_at",
+            "memberCount" => "member_count",
+            "name" => "name",
+            "primaryContactId" => "primary_contact_id",
+            "primaryContactName" => "primary_contact_name",
+            "updatedAt" => "updated_at",
+        ];
+
+        AttributeMapper::from($payload, $household->attributes, $attributeMap, ["created_at", "updated_at",]);
+
+        foreach ($payload->relationships->people->data as $person) {
+            $household->relationships->addPerson($person->id);
+        }
+
+        $household->relationships->setPrimaryContactId($payload->relationships->primary_contact->data->id);
+
+        $clientResponse->data->add($household);
+    }
+
+    private function updateMemberCount(): void
+    {
+        $this->attributes->memberCount = $this->relationships->people->count();
     }
 }
